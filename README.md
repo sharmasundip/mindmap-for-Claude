@@ -68,11 +68,7 @@ The visualization server starts automatically when Claude first uses a mindmap t
 
 ### 3. Ask Claude anything
 
-As Claude works through your request, you'll see the mind map grow in real time:
-
-| Before | After |
-|--------|-------|
-| ![Before](mindmap-before.png) | ![After](mindmap-after.png) |
+As Claude works through your request, you'll see the mind map grow in real time.
 
 ### 4. Instruct Claude to use the mind map
 
