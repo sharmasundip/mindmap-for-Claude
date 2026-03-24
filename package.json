@@ -1,0 +1,29 @@
+{
+  "name": "claude-mindmap",
+  "version": "1.0.0",
+  "description": "Real-time mind map visualization of Claude's reasoning with token tracking",
+  "type": "module",
+  "main": "server.js",
+  "bin": {
+    "claude-mindmap": "./server.js"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "server": "node shared-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "ws": "^8.18.0",
+    "zod": "^3.24.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sharmasundip/mindmap-for-Claude.git"
+  },
+  "author": "sharmasundip",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sharmasundip/mindmap-for-Claude/issues"
+  },
+  "homepage": "https://github.com/sharmasundip/mindmap-for-Claude#readme"
+}

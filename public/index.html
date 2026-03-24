@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Mind Map</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #06060f;
+      --surface: #0f1020;
+      --surface-2: #161830;
+      --border: #1e2044;
+      --text: #e2e4f0;
+      --text-muted: #6b70a0;
+      --root: #6366f1;
+      --thought: #8b5cf6;
+      --action: #f59e0b;
+      --observation: #10b981;
+      --decision: #ec4899;
+      --output: #06b6d4;
+      --error: #ef4444;
+      --active-pulse: rgba(99, 102, 241, 0.15);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.06) 0%, transparent 60%),
+        linear-gradient(rgba(99, 102, 241, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 48px 48px, 48px 48px;
+    }
+
+    /* ── Header ──────────────────────────────────────────── */
+
+    #header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: rgba(6, 6, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    /* ── Session Selector ─────────────────────────────────── */
+
+    #session-selector {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    #session-select {
+      appearance: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 30px 5px 10px;
+      cursor: pointer;
+      min-width: 140px;
+      max-width: 240px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    #session-select:hover { border-color: var(--root); }
+    #session-select:focus { border-color: var(--root); box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
+
+    #session-select option {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    #session-select option:disabled {
+      color: var(--text-muted);
+    }
+
+    .session-chevron {
+      position: absolute;
+      right: 9px;
+      pointer-events: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .session-active-dot {
+      position: absolute;
+      left: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--observation);
+      box-shadow: 0 0 6px rgba(16,185,129,0.6);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--root), #818cf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .stats {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .stat-value {
+      color: var(--text);
+    }
+
+    .stat-tokens-in .stat-value { color: var(--observation); }
+    .stat-tokens-out .stat-value { color: var(--action); }
+    .stat-nodes .stat-value { color: var(--output); }
+    .stat-time .stat-value { color: var(--thought); }
+    .stat-model .stat-value { color: var(--root); }
+
+    #connection-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--error);
+      transition: background 0.3s;
+    }
+
+    .status-dot.connected {
+      background: var(--observation);
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+    }
+
+    /* ── Mind Map Container ───────────────────────────────── */
+
+    #mindmap {
+      width: 100%;
+      height: 100%;
+      padding-top: 52px;
+    }
+
+    #mindmap svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Links ────────────────────────────────────────────── */
+
+    .link {
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    /* ── Nodes ────────────────────────────────────────────── */
+
+    .node { cursor: pointer; }
+
+    .node-glow {
+      opacity: 0.15;
+      transition: opacity 0.3s;
+    }
+
+    .node:hover .node-glow { opacity: 0.35; }
+
+    .node-circle {
+      stroke-width: 2;
+      transition: all 0.3s;
+    }
+
+    .node:hover .node-circle {
+      stroke-width: 3;
+      filter: brightness(1.2);
+    }
+
+    .node-label {
+      fill: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      pointer-events: none;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.6);
+    }
+
+    .node-label-root {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .token-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      fill: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .status-icon {
+      font-size: 10px;
+      pointer-events: none;
+    }
+
+    /* ── Active pulse animation ───────────────────────────── */
+
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.2; }
+      50% { transform: scale(1.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 0.2; }
+    }
+
+    .pulse-ring {
+      transform-origin: center;
+    }
+
+    .pulse-ring.is-active {
+      animation: pulse-ring 2.5s ease-in-out infinite;
+    }
+
+    /* ── Tooltip ──────────────────────────────────────────── */
+
+    #tooltip {
+      position: fixed;
+      display: none;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      max-width: 320px;
+      z-index: 200;
+      pointer-events: none;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    #tooltip .tip-label {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    #tooltip .tip-detail {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 6px;
+    }
+
+    #tooltip .tip-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    #tooltip .tip-tokens-in { color: var(--observation); }
+    #tooltip .tip-tokens-out { color: var(--action); }
+
+    #tooltip .tip-type {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Legend ────────────────────────────────────────────── */
+
+    #legend {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(6, 6, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      z-index: 100;
+    }
+
+    #legend h3 {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .legend-items {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px var(--dot-color);
+    }
+
+    /* ── Empty State ──────────────────────────────────────── */
+
+    #empty-state {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      transition: opacity 0.5s;
+    }
+
+    #empty-state.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .empty-brain {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--root), var(--thought));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    @keyframes brain-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.3); }
+      50% { box-shadow: 0 0 0 24px rgba(99, 102, 241, 0); }
+    }
+
+    .empty-brain { animation: brain-pulse 3s ease-in-out infinite; }
+
+    .empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .empty-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .empty-code {
+      margin-top: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+    }
+
+    /* ── Zoom Controls ────────────────────────────────────── */
+
+    #zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 100;
+    }
+
+    .zoom-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(6, 6, 15, 0.85);
+      backdrop-filter: blur(20px);
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .zoom-btn:hover {
+      background: var(--surface-2);
+      border-color: var(--root);
+    }
+
+    /* ── SVG Filters ──────────────────────────────────────── */
+
+    .glow-filter { flood-opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div id="header">
+    <div class="logo">
+      <div class="logo-icon">&#x1f9e0;</div>
+      <span>Claude Mind Map</span>
+    </div>
+
+    <!-- Session Selector -->
+    <div id="session-selector">
+      <div class="session-active-dot" id="session-active-dot" style="display:none"></div>
+      <select id="session-select">
+        <option value="" disabled selected>No sessions</option>
+      </select>
+      <span class="session-chevron">&#x25BE;</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat stat-tokens-in">
+        <span class="stat-label">In</span>
+        <span class="stat-value" id="token-in-count">0</span>
+      </div>
+      <div class="stat stat-tokens-out">
+        <span class="stat-label">Out</span>
+        <span class="stat-value" id="token-out-count">0</span>
+      </div>
+      <div class="stat stat-nodes">
+        <span class="stat-label">Nodes</span>
+        <span class="stat-value" id="node-count">0</span>
+      </div>
+      <div class="stat stat-time">
+        <span class="stat-label">Time</span>
+        <span class="stat-value" id="session-time">0:00</span>
+      </div>
+      <div class="stat stat-model" id="stat-model" style="display:none">
+        <span class="stat-label">Model</span>
+        <span class="stat-value" id="model-name"></span>
+      </div>
+    </div>
+    <div id="connection-status">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Connecting</span>
+    </div>
+  </div>
+
+  <!-- Mind Map SVG -->
+  <div id="mindmap"></div>
+
+  <!-- Tooltip -->
+  <div id="tooltip">
+    <div class="tip-label"></div>
+    <div class="tip-detail"></div>
+    <div class="tip-meta">
+      <span class="tip-type"></span>
+      <span class="tip-tokens-in"></span>
+      <span class="tip-tokens-out"></span>
+      <span class="tip-status"></span>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div id="legend">
+    <h3>Node Types</h3>
+    <div class="legend-items">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--root); --dot-color:var(--root)"></div>Root</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--thought); --dot-color:var(--thought)"></div>Thought</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--action); --dot-color:var(--action)"></div>Action</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--observation); --dot-color:var(--observation)"></div>Observation</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--decision); --dot-color:var(--decision)"></div>Decision</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--output); --dot-color:var(--output)"></div>Output</div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="empty-state">
+    <div class="empty-brain">&#x1f9e0;</div>
+    <div class="empty-title">Waiting for Claude...</div>
+    <div class="empty-subtitle">
+      Start a task in Claude Code and use the mind map tools<br>
+      to visualize your reasoning in real time.
+    </div>
+    <div class="empty-code">claude mcp add mindmap -- node server.js</div>
+  </div>
+
+  <!-- Zoom Controls -->
+  <div id="zoom-controls">
+    <button class="zoom-btn" id="zoom-in" title="Zoom in">+</button>
+    <button class="zoom-btn" id="zoom-out" title="Zoom out">&#x2212;</button>
+    <button class="zoom-btn" id="zoom-fit" title="Fit to view">&#x2922;</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script>
+    // ── Configuration ─────────────────────────────────────
+    const COLORS = {
+      root: '#6366f1',
+      thought: '#8b5cf6',
+      action: '#f59e0b',
+      observation: '#10b981',
+      decision: '#ec4899',
+      output: '#06b6d4'
+    };
+
+    const STATUS_ICONS = {
+      active: '●',
+      complete: '✓',
+      error: '✗'
+    };
+
+    const NODE_RADIUS = { root: 22, normal: 11 };
+    const GLOW_RADIUS = { root: 36, normal: 20 };
+
+    // ── DOM refs ──────────────────────────────────────────
+    const tokenInCountEl = document.getElementById('token-in-count');
+    const tokenOutCountEl = document.getElementById('token-out-count');
+    const nodeCountEl = document.getElementById('node-count');
+    const sessionTimeEl = document.getElementById('session-time');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const emptyState = document.getElementById('empty-state');
+    const tooltipEl = document.getElementById('tooltip');
+    const sessionSelect = document.getElementById('session-select');
+    const sessionActiveDot = document.getElementById('session-active-dot');
+    const statModel = document.getElementById('stat-model');
+    const modelNameEl = document.getElementById('model-name');
+
+    // ── State ─────────────────────────────────────────────
+    let currentData = null;
+    let sessionStart = null;
+    let previousNodePositions = new Map();
+    let currentSessionId = null;
+    let knownSessions = []; // last received sessions list
+
+    // ── SVG Setup ─────────────────────────────────────────
+    const container = document.getElementById('mindmap');
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    const svg = d3.select('#mindmap')
+      .append('svg')
+      .attr('width', '100%')
+      .attr('height', '100%')
+      .attr('viewBox', `0 0 ${width} ${height}`);
+
+    // SVG Filters for glow effects
+    const defs = svg.append('defs');
+
+    Object.entries(COLORS).forEach(([type, color]) => {
+      const filter = defs.append('filter')
+        .attr('id', `glow-${type}`)
+        .attr('x', '-50%').attr('y', '-50%')
+        .attr('width', '200%').attr('height', '200%');
+
+      filter.append('feGaussianBlur')
+        .attr('stdDeviation', '4')
+        .attr('result', 'blur');
+
+      filter.append('feFlood')
+        .attr('flood-color', color)
+        .attr('flood-opacity', '0.6')
+        .attr('result', 'color');
+
+      filter.append('feComposite')
+        .attr('in', 'color')
+        .attr('in2', 'blur')
+        .attr('operator', 'in')
+        .attr('result', 'colorBlur');
+
+      const merge = filter.append('feMerge');
+      merge.append('feMergeNode').attr('in', 'colorBlur');
+      merge.append('feMergeNode').attr('in', 'SourceGraphic');
+    });
+
+    // Zoom
+    const zoomBehavior = d3.zoom()
+      .scaleExtent([0.1, 5])
+      .on('zoom', (event) => {
+        mainGroup.attr('transform', event.transform);
+      });
+
+    svg.call(zoomBehavior);
+
+    const mainGroup = svg.append('g');
+    const linkGroup = mainGroup.append('g').attr('class', 'links');
+    const nodeGroup = mainGroup.append('g').attr('class', 'nodes');
+
+    // Center initially
+    const initialTransform = d3.zoomIdentity.translate(width / 2, height / 2);
+    svg.call(zoomBehavior.transform, initialTransform);
+
+    // ── Zoom Controls ─────────────────────────────────────
+    document.getElementById('zoom-in').addEventListener('click', () => {
+      svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.4);
+    });
+
+    document.getElementById('zoom-out').addEventListener('click', () => {
+      svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.7);
+    });
+
+    document.getElementById('zoom-fit').addEventListener('click', () => fitToView());
+
+    // ── Helpers ───────────────────────────────────────────
+    function radialPoint(x, y) {
+      return [y * Math.cos(x - Math.PI / 2), y * Math.sin(x - Math.PI / 2)];
+    }
+
+    function truncate(str, max) {
+      return str.length > max ? str.slice(0, max - 1) + '…' : str;
+    }
+
+    function formatTokens(n) {
+      if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+      if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+      return String(n);
+    }
+
+    function formatDuration(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      const h = Math.floor(m / 60);
+      if (h > 0) return `${h}:${String(m % 60).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    function colorForNode(d) {
+      if (d.data.status === 'error') return '#ef4444';
+      return COLORS[d.data.type] || COLORS.thought;
+    }
+
+    function showModel(model) {
+      if (!model) { statModel.style.display = 'none'; return; }
+      // Strip "claude-" prefix for brevity: "claude-sonnet-4-6" → "sonnet-4-6"
+      const short = model.replace(/^claude-/, '');
+      modelNameEl.textContent = short;
+      statModel.style.display = '';
+    }
+
+    // ── Rendering ─────────────────────────────────────────
+    function render(data) {
+      if (!data || !data.tree) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      const root = d3.hierarchy(data.tree);
+      const nodeCount = root.descendants().length;
+      const depth = root.height;
+
+      // Dynamic tree sizing
+      const baseRadius = 120;
+      const radiusStep = Math.max(80, 180 - nodeCount * 2);
+      const maxRadius = baseRadius + depth * radiusStep;
+
+      const treeLayout = d3.tree()
+        .size([2 * Math.PI, maxRadius])
+        .separation((a, b) => {
+          const sep = a.parent === b.parent ? 1 : 1.5;
+          return sep / Math.max(1, a.depth * 0.7);
+        });
+
+      treeLayout(root);
+
+      // ── Links ──
+      const linkData = root.links();
+      const radialLink = d3.linkRadial()
+        .angle(d => d.x)
+        .radius(d => d.y);
+
+      const links = linkGroup.selectAll('.link')
+        .data(linkData, d => `${d.source.data.id}-${d.target.data.id}`);
+
+      // Enter
+      links.enter()
+        .append('path')
+        .attr('class', 'link')
+        .attr('d', radialLink)
+        .attr('stroke', d => colorForNode(d.target))
+        .attr('stroke-opacity', 0)
+        .transition().duration(600).ease(d3.easeCubicOut)
+        .attr('stroke-opacity', 0.25);
+
+      // Update
+      links.transition().duration(500).ease(d3.easeCubicOut)
+        .attr('d', radialLink)
+        .attr('stroke', d => colorForNode(d.target))
+        .attr('stroke-opacity', 0.25);
+
+      // Exit
+      links.exit()
+        .transition().duration(300)
+        .attr('stroke-opacity', 0)
+        .remove();
+
+      // ── Nodes ──
+      const nodeData = root.descendants();
+
+      const nodes = nodeGroup.selectAll('.node')
+        .data(nodeData, d => d.data.id);
+
+      // ── Enter: append structural elements once ──
+      const nodeEnter = nodes.enter()
+        .append('g')
+        .attr('class', 'node')
+        .attr('transform', d => {
+          const prev = previousNodePositions.get(d.data.id);
+          if (prev) return `translate(${prev[0]},${prev[1]})`;
+          const p = d.parent || d;
+          const pt = radialPoint(p.x, p.y);
+          return `translate(${pt[0]},${pt[1]})`;
+        })
+        .attr('opacity', 0)
+        .on('mouseover', showTooltip)
+        .on('mousemove', moveTooltip)
+        .on('mouseout', hideTooltip);
+
+      nodeEnter.append('circle').attr('class', 'pulse-ring').attr('stroke', 'none');
+      nodeEnter.append('circle').attr('class', 'node-glow').attr('stroke', 'none');
+      nodeEnter.append('circle').attr('class', 'node-circle');
+      nodeEnter.append('text').attr('class', 'status-icon').attr('text-anchor', 'middle').attr('dy', '0.35em');
+      nodeEnter.append('text').attr('class', d => `node-label ${d.depth === 0 ? 'node-label-root' : ''}`).attr('text-anchor', 'middle');
+      nodeEnter.append('text').attr('class', 'token-badge token-badge-in').attr('text-anchor', 'middle');
+      nodeEnter.append('text').attr('class', 'token-badge token-badge-out').attr('text-anchor', 'middle');
+
+      // Animate enter from parent position
+      nodeEnter.transition().duration(600).ease(d3.easeCubicOut)
+        .attr('transform', d => {
+          const pt = radialPoint(d.x, d.y);
+          return `translate(${pt[0]},${pt[1]})`;
+        })
+        .attr('opacity', 1);
+
+      // Animate position update for existing nodes
+      nodes.transition().duration(500).ease(d3.easeCubicOut)
+        .attr('transform', d => {
+          const pt = radialPoint(d.x, d.y);
+          return `translate(${pt[0]},${pt[1]})`;
+        })
+        .attr('opacity', 1);
+
+      // ── Merge enter + update: apply all visual state to every node ──
+      const nodeAll = nodeEnter.merge(nodes);
+
+      nodeAll.each(function(d) {
+        const el = d3.select(this);
+        const color = colorForNode(d);
+        const isActive = d.data.status === 'active';
+        const isComplete = d.data.status === 'complete';
+        const isError = d.data.status === 'error';
+        const r = d.depth === 0 ? NODE_RADIUS.root : NODE_RADIUS.normal;
+        const gr = d.depth === 0 ? GLOW_RADIUS.root : GLOW_RADIUS.normal;
+
+        // Pulse ring — always present, animated only when active
+        el.select('.pulse-ring')
+          .attr('r', gr)
+          .attr('fill', color)
+          .classed('is-active', isActive)
+          .style('display', isActive ? null : 'none');
+
+        // Glow
+        el.select('.node-glow')
+          .attr('r', gr)
+          .attr('fill', color)
+          .attr('opacity', 0.15);
+
+        // Main circle
+        el.select('.node-circle')
+          .attr('r', r)
+          .attr('fill', isComplete ? 'transparent' : color)
+          .attr('stroke', color)
+          .attr('stroke-width', 2)
+          .attr('filter', `url(#glow-${isError ? 'root' : d.data.type})`);
+
+        // Status icon — always present, text set by status
+        el.select('.status-icon')
+          .attr('fill', isError ? '#fff' : color)
+          .attr('font-size', '10px')
+          .text(isComplete ? '✓' : isError ? '✗' : '');
+
+        // Label
+        el.select('.node-label')
+          .attr('dy', r + 16)
+          .text(truncate(d.data.label, d.depth === 0 ? 50 : 30));
+
+        // Token badges
+        el.select('.token-badge-in')
+          .attr('dy', -(r + 18))
+          .attr('fill', 'var(--observation)')
+          .text(d.data.inputTokens > 0 ? '↓' + formatTokens(d.data.inputTokens) : '');
+
+        el.select('.token-badge-out')
+          .attr('dy', -(r + 7))
+          .attr('fill', 'var(--action)')
+          .text(d.data.outputTokens > 0 ? '↑' + formatTokens(d.data.outputTokens) : '');
+      });
+
+      // ── Exit ──
+      nodes.exit()
+        .transition().duration(400)
+        .attr('opacity', 0)
+        .attr('transform', d => {
+          const p = d.parent || d;
+          const pt = radialPoint(p.x, p.y);
+          return `translate(${pt[0]},${pt[1]})`;
+        })
+        .remove();
+
+      // Save positions for next render
+      previousNodePositions.clear();
+      nodeData.forEach(d => {
+        previousNodePositions.set(d.data.id, radialPoint(d.x, d.y));
+      });
+
+      // Update header stats
+      tokenInCountEl.textContent = formatTokens(data.totalInputTokens || 0);
+      tokenOutCountEl.textContent = formatTokens(data.totalOutputTokens || 0);
+      nodeCountEl.textContent = data.nodeCount;
+      if (data.sessionStart) sessionStart = data.sessionStart;
+      showModel(data.model);
+    }
+
+    // ── Fit to View ───────────────────────────────────────
+    function fitToView() {
+      const bounds = mainGroup.node().getBBox();
+      if (bounds.width === 0 || bounds.height === 0) return;
+
+      const padding = 80;
+      const fullWidth = width;
+      const fullHeight = height - 52; // account for header
+      const bw = bounds.width + padding * 2;
+      const bh = bounds.height + padding * 2;
+      const scale = Math.min(fullWidth / bw, fullHeight / bh, 2);
+      const cx = bounds.x + bounds.width / 2;
+      const cy = bounds.y + bounds.height / 2;
+
+      svg.transition().duration(750).ease(d3.easeCubicOut)
+        .call(zoomBehavior.transform,
+          d3.zoomIdentity
+            .translate(fullWidth / 2, fullHeight / 2 + 26)
+            .scale(scale)
+            .translate(-cx, -cy)
+        );
+    }
+
+    // ── Tooltip ───────────────────────────────────────────
+    function showTooltip(event, d) {
+      const tip = tooltipEl;
+      tip.style.display = 'block';
+      tip.querySelector('.tip-label').textContent = d.data.label;
+      tip.querySelector('.tip-detail').textContent = d.data.detail || '';
+      tip.querySelector('.tip-detail').style.display = d.data.detail ? 'block' : 'none';
+
+      const typeEl = tip.querySelector('.tip-type');
+      typeEl.textContent = d.data.type;
+      typeEl.style.background = colorForNode(d) + '22';
+      typeEl.style.color = colorForNode(d);
+
+      tip.querySelector('.tip-tokens-in').textContent = d.data.inputTokens > 0 ? `↓ ${formatTokens(d.data.inputTokens)} in` : '';
+      tip.querySelector('.tip-tokens-out').textContent = d.data.outputTokens > 0 ? `↑ ${formatTokens(d.data.outputTokens)} out` : '';
+      tip.querySelector('.tip-status').textContent = d.data.status;
+    }
+
+    function moveTooltip(event) {
+      tooltipEl.style.left = (event.clientX + 16) + 'px';
+      tooltipEl.style.top = (event.clientY - 10) + 'px';
+    }
+
+    function hideTooltip() {
+      tooltipEl.style.display = 'none';
+    }
+
+    // ── Session Timer ─────────────────────────────────────
+    setInterval(() => {
+      if (sessionStart) {
+        sessionTimeEl.textContent = formatDuration(Date.now() - sessionStart);
+      }
+    }, 1000);
+
+    // ── Session Management ────────────────────────────────
+    function updateDropdown(sessions) {
+      knownSessions = sessions;
+      const prev = sessionSelect.value;
+
+      // Rebuild options
+      sessionSelect.innerHTML = '';
+      if (sessions.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.disabled = true;
+        opt.selected = true;
+        opt.textContent = 'No sessions';
+        sessionSelect.appendChild(opt);
+        sessionActiveDot.style.display = 'none';
+        return;
+      }
+
+      sessions.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.sessionId;
+        opt.textContent = s.active
+          ? s.label
+          : `${s.label} (ended)`;
+        if (s.sessionId === prev || s.sessionId === currentSessionId) opt.selected = true;
+        sessionSelect.appendChild(opt);
+      });
+
+      // If nothing is selected yet, auto-pick most recently active session
+      if (!currentSessionId || !sessions.find(s => s.sessionId === currentSessionId)) {
+        const best = sessions.find(s => s.active) || sessions[0];
+        if (best) subscribeToSession(best.sessionId);
+      }
+
+      // Update active dot
+      const selected = sessions.find(s => s.sessionId === sessionSelect.value);
+      sessionActiveDot.style.display = selected?.active ? 'block' : 'none';
+    }
+
+    function subscribeToSession(sessionId) {
+      if (!sessionId || !ws || ws.readyState !== 1) return;
+      currentSessionId = sessionId;
+      sessionSelect.value = sessionId;
+      previousNodePositions.clear();
+      ws.send(JSON.stringify({ type: 'subscribe', sessionId }));
+
+      const sess = knownSessions.find(s => s.sessionId === sessionId);
+      sessionActiveDot.style.display = sess?.active ? 'block' : 'none';
+      showModel(sess?.model || null);
+    }
+
+    sessionSelect.addEventListener('change', () => {
+      subscribeToSession(sessionSelect.value);
+    });
+
+    // ── WebSocket ─────────────────────────────────────────
+    let ws = null;
+    let reconnectTimer = null;
+    let isFirstData = true;
+
+    function connect() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${location.host}`);
+
+      ws.onopen = () => {
+        statusDot.classList.add('connected');
+        statusText.textContent = 'Connected';
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+        // Re-subscribe after reconnect
+        if (currentSessionId) {
+          ws.send(JSON.stringify({ type: 'subscribe', sessionId: currentSessionId }));
+        }
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+
+          if (msg.type === 'sessions') {
+            updateDropdown(msg.sessions);
+            return;
+          }
+
+          if (msg.type === 'state') {
+            // Update dropdown session list if included
+            if (msg.sessions) updateDropdown(msg.sessions);
+
+            currentData = msg;
+            render(msg);
+
+            if (isFirstData && msg.tree) {
+              isFirstData = false;
+              setTimeout(fitToView, 700);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse message:', e);
+        }
+      };
+
+      ws.onclose = () => {
+        statusDot.classList.remove('connected');
+        statusText.textContent = 'Disconnected';
+        scheduleReconnect();
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    }
+
+    function scheduleReconnect() {
+      if (reconnectTimer) return;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        statusText.textContent = 'Reconnecting...';
+        connect();
+      }, 2000);
+    }
+
+    // ── Window Resize ─────────────────────────────────────
+    window.addEventListener('resize', () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      svg.attr('viewBox', `0 0 ${w} ${h}`);
+    });
+
+    // ── Init ──────────────────────────────────────────────
+    connect();
+  </script>
+</body>
+</html>
