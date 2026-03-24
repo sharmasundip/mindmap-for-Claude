@@ -14,7 +14,7 @@ Two-process Node.js (ESM) design:
 
 ```
 Claude Code A <──stdio──> server.js (session A) ──HTTP POST──┐
-                                                              ├──> shared-server.js (:3333) <──WebSocket──> Browser
+                                                              ├──> shared-server.js (:7788) <──WebSocket──> Browser
 Claude Code B <──stdio──> server.js (session B) ──HTTP POST──┘         │
                                                                   HTTP static files
                                                                   (public/index.html)
@@ -49,7 +49,7 @@ npm install
 claude mcp add mindmap -- node /Users/sundips/Documents/code/personal/UI/server.js
 ```
 
-The browser UI is at `http://localhost:3333`. Change port with `MINDMAP_PORT` env var.
+The browser UI is at `http://localhost:7788`. Change port with `MINDMAP_PORT` env var.
 
 ## Using the Mind Map
 

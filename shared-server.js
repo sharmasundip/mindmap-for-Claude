@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = parseInt(process.env.MINDMAP_PORT || '3333');
+const PORT = parseInt(process.env.MINDMAP_PORT || '7788');
 
 // ── Session State ─────────────────────────────────────────────
 

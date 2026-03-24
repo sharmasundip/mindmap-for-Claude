@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = parseInt(process.env.MINDMAP_PORT || '3333');
+const PORT = parseInt(process.env.MINDMAP_PORT || '7788');
 const BASE = `http://localhost:${PORT}`;
 const SESSION_ID = randomUUID();
 

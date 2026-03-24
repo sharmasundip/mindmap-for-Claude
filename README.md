@@ -60,7 +60,7 @@ claude
 
 ### 2. Open the mind map in your browser
 
-Navigate to **http://localhost:3333** in your browser, or ask Claude to open it:
+Navigate to **http://localhost:7788** in your browser, or ask Claude to open it:
 
 > "Open the mind map"
 
@@ -98,7 +98,7 @@ Add the following to your project's `CLAUDE.md` file (or `~/.claude/CLAUDE.md` f
 
 ### Custom port
 
-Set the `MINDMAP_PORT` environment variable to change the default port (3333):
+Set the `MINDMAP_PORT` environment variable to change the default port (7788):
 
 ```bash
 MINDMAP_PORT=4000 claude
@@ -116,7 +116,7 @@ Two-process design for reliability:
 
 ```
 Claude Code A <──stdio──> server.js (session A) ──HTTP──┐
-                                                         ├──> shared-server.js (:3333) <──WS──> Browser
+                                                         ├──> shared-server.js (:7788) <──WS──> Browser
 Claude Code B <──stdio──> server.js (session B) ──HTTP──┘         │
                                                              static files
                                                            (public/index.html)
@@ -140,13 +140,13 @@ Claude Code B <──stdio──> server.js (session B) ──HTTP──┘     
 
 ### Mind map not updating
 
-- Check that the browser is connected at http://localhost:3333
+- Check that the browser is connected at http://localhost:7788
 - Verify the MCP server is registered: `claude mcp list`
-- Check if the shared server is running: `curl http://localhost:3333/api/ping`
+- Check if the shared server is running: `curl http://localhost:7788/api/ping`
 
 ### Port already in use
 
-- Kill the existing shared server: `lsof -ti:3333 | xargs kill`
+- Kill the existing shared server: `lsof -ti:7788 | xargs kill`
 - Or use a different port via `MINDMAP_PORT`
 
 ### MCP server not found
