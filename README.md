@@ -2,7 +2,7 @@
 
 Real-time mind map visualization of Claude's reasoning process. Watch Claude think as a radial tree that grows live in your browser, complete with token tracking.
 
-![Mind Map Visualization](mindmap-complete.png)
+![Mind Map Visualization](demo.gif)
 
 ## What is this?
 
